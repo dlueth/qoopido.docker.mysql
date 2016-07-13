@@ -1,0 +1,26 @@
+#!/bin/bash
+
+down()
+{
+	local DOWN="/app/config/down.sh"
+
+	if [ -f $DOWN ]
+	then
+		echo "    Running shutdown script /app/config/down.sh"
+		chmod +x $DOWN && chmod 755 $DOWN && eval $DOWN;
+	fi
+
+	echo "    Exporting existing database"
+	
+	/usr/bin/mysqldump -uroot --hex-blob --routines --triggers --all-databases > /tmp/mysql.sql
+	mv /tmp/mysql.sql /app/data/database/dump.sql
+ 	/usr/bin/mysqladmin -uroot shutdown
+	
+	echo "    Successfully exported existing database"
+
+	exit
+}
+
+trap down SIGTERM
+
+/usr/bin/mysqld_safe --skip-syslog > /dev/null 2>&1 & wait
